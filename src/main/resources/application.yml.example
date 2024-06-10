@@ -1,0 +1,12 @@
+# THIS IS SECRET CONFIGURATION, WHERE YOU PUT SENSITIVE CONFIGURATION FOR YOUR BOT
+
+discord:
+  token: YOUR_TOKEN_HERE
+
+guild:
+  id: 123456
+  statistics:
+    online_vc_id: 123456
+    idle_vc_id: 123456
+    dnd_vc_id: 123456
+
