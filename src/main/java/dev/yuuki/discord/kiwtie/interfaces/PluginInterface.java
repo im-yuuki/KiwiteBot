@@ -1,4 +1,4 @@
-package dev.yuuki.discord.kiwtiebot.interfaces;
+package dev.yuuki.discord.kiwtie.interfaces;
 
 public interface PluginInterface {
     String name = null;
