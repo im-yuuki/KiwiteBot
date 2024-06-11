@@ -34,4 +34,5 @@ tasks.named('test') {
 
 shadowJar {
     archiveClassifier.set('all')
+    destinationDir = "/target"
 }
