@@ -1,4 +1,4 @@
-name: Build Fat JAR
+name: Build JAR
 
 on: [push, pull_request]
 
@@ -16,11 +16,11 @@ jobs:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '21'
 
-    - name: Build with Maven
+    - name: Build with Gradle
       run: chmod +x gradlew && ./gradlew clean shadowJar
 
-    - name: Upload Fat JAR
+    - name: Upload JAR
       uses: actions/upload-artifact@v2
       with:
         name: fat-jar
-        path: target/*-with-dependencies.jar
+        path: target/*.jar
