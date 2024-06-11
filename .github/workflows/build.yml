@@ -17,7 +17,7 @@ jobs:
           java-version: '21'
 
     - name: Build with Maven
-      run: ./gradlew clean shadowJar
+      run: chmod +x gradlew && ./gradlew clean shadowJar
 
     - name: Upload Fat JAR
       uses: actions/upload-artifact@v2
