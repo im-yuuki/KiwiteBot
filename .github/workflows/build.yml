@@ -7,20 +7,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v4.1.6
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4.2.1
       with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
+          distribution: 'temurin'
           java-version: '21'
 
     - name: Build with Gradle
       run: chmod +x gradlew && ./gradlew bootJar
 
     - name: Upload JAR
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.3
       with:
         name: boot-jar
         path: build/libs/*.jar
