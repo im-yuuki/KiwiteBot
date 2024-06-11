@@ -17,10 +17,10 @@ jobs:
           java-version: '21'
 
     - name: Build with Gradle
-      run: chmod +x gradlew && ./gradlew clean shadowJar
+      run: chmod +x gradlew && ./gradlew bootJar
 
     - name: Upload JAR
       uses: actions/upload-artifact@v2
       with:
-        name: fat-jar
-        path: target/*.jar
+        name: boot-jar
+        path: build/libs/*.jar
