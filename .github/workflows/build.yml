@@ -1,4 +1,5 @@
-run-name: Build JAR
+name: Build BootJAR
+run-name: Build BootJAR
 
 on: workflow_dispatch
 
