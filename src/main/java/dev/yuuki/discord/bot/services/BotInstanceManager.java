@@ -1,7 +1,7 @@
-package dev.yuuki.discord.kiwtiebot.services;
+package dev.yuuki.discord.bot.services;
 
-import dev.yuuki.discord.kiwtiebot.interfaces.PluginInterface;
-import dev.yuuki.discord.kiwtiebot.interfaces.InstanceManagerInterface;
+import dev.yuuki.discord.bot.interfaces.PluginInterface;
+import dev.yuuki.discord.bot.interfaces.InstanceManagerInterface;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -29,16 +29,16 @@ import java.util.HashMap;
 
 @Service
 public class BotInstanceManager implements InstanceManagerInterface {
-    public EnumSet<GatewayIntent> intents = EnumSet.noneOf(GatewayIntent.class);
-    public EnumSet<CacheFlag> cacheFlag = EnumSet.noneOf(CacheFlag.class);
-    public ArrayList<ListenerAdapter> listeners = new ArrayList<>();
+    EnumSet<GatewayIntent> intents = EnumSet.noneOf(GatewayIntent.class);
+    EnumSet<CacheFlag> cacheFlag = EnumSet.noneOf(CacheFlag.class);
+    ArrayList<ListenerAdapter> listeners = new ArrayList<>();
 
-    public HashMap<String, PluginInterface> pluginPool = new HashMap<>();
+    HashMap<String, PluginInterface> pluginPool = new HashMap<>();
 
     final static Logger logger = LoggerFactory.getLogger(BotInstanceManager.class);
 
-    public JDA jda = null;
-    public boolean started = false;
+    JDA jda = null;
+    InstanceStatus status = InstanceStatus.DOWN;
 
 
     @Value("${discord.token}") String token;
@@ -60,7 +60,7 @@ public class BotInstanceManager implements InstanceManagerInterface {
             try {
                 PluginInterface instance = plugin.getDeclaredConstructor().newInstance();
                 instance.load(this);
-                pluginPool.put(instance.name, instance);
+                pluginPool.put(instance.name(), instance);
                 success++;
             } catch (Exception e) {
                 logger.error("Load plugin %s failed".formatted(plugin.getName()));
@@ -71,34 +71,66 @@ public class BotInstanceManager implements InstanceManagerInterface {
 
 
     public void start() {
-        if (started) stop();
-
-        logger.info("Building JDA instance");
-        JDABuilder builder = JDABuilder.createLight(token);
-        builder.setAutoReconnect(true);
-        builder.setEnabledIntents(intents);
-        builder.enableCache(cacheFlag);
-        builder.setMemberCachePolicy(MemberCachePolicy.NONE);
-
-        for (ListenerAdapter listener : listeners) builder.addEventListeners(listener);
-
-        jda = builder.build();
-        logger.info("JDA build success");
+        switch (status) {
+            case InstanceStatus.PROCESSING -> { return; }
+            case InstanceStatus.RUNNING -> stop();
+        }
         try {
+            logger.info("Building JDA instance");
+            status = InstanceStatus.PROCESSING;
+            JDABuilder builder = JDABuilder.createLight(token);
+            builder.setAutoReconnect(true);
+            builder.setEnabledIntents(intents);
+            builder.enableCache(cacheFlag);
+            builder.setMemberCachePolicy(MemberCachePolicy.NONE);
+
+            for (ListenerAdapter listener : listeners) builder.addEventListeners(listener);
+
+            jda = builder.build();
+            logger.info("JDA build success");
+
             jda.awaitReady();
             SelfUser selfUser = jda.getSelfUser();
             logger.info("Logged in as %s (ID: %s)".formatted(selfUser.getName(), selfUser.getId()));
-            started = true;
+            status = InstanceStatus.RUNNING;
         } catch (Exception e) {
             logger.error("JDA instance failed to start", e);
             stop();
         }
     }
 
+    @EventListener
+    public void onShutdown(ContextClosedEvent ignoredEvent) {
+        stop();
+    }
 
+
+    // Interface implements
+
+    @Override
+    public EnumSet<GatewayIntent> getIntentsSet() { return intents; }
+
+    @Override
+    public EnumSet<CacheFlag> getCacheFlagSet() { return cacheFlag; }
+
+    @Override
+    public ArrayList<ListenerAdapter> getListenerPool() { return listeners; }
+
+    @Override
+    public JDA getJDA() { return jda; }
+
+    @Override
+    public InstanceStatus getStatus() { return status; }
+
+    @Override
+    public TaskScheduler getTaskScheduler() { return taskScheduler; }
+
+    @Override
     public void stop() {
-        logger.info("Unloading plugin");
+        if (status != InstanceStatus.RUNNING) return;
 
+        logger.info("Unloading plugin");
+        status = InstanceStatus.PROCESSING;
         for (PluginInterface plugin : pluginPool.values()) {
             try {
                 plugin.stop();
@@ -114,15 +146,8 @@ public class BotInstanceManager implements InstanceManagerInterface {
             jda.shutdownNow();
             jda = null;
         }
-        started = false;
+        status = InstanceStatus.DOWN;
 
         logger.info("Instance sucessfully cleaned");
     }
-
-
-    @EventListener
-    public void onShutdown(ContextClosedEvent ignoredEvent) {
-        stop();
-    }
-
 }

@@ -1,6 +1,6 @@
-package dev.yuuki.discord.kiwtiebot.api;
+package dev.yuuki.discord.bot.api;
 
-import dev.yuuki.discord.kiwtiebot.services.BotInstanceManager;
+import dev.yuuki.discord.bot.services.BotInstanceManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
